@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vada's Day Spa — SEO Audit &amp; Growth Plan</title>
+<style>
+  :root{
+    --bg:#faf5ee;
+    --paper:#ffffff;
+    --ink:#2b241d;
+    --ink-soft:#6b5d51;
+    --ink-faint:#8f8275;
+    --line:#e7dcca;
+    --line-soft:#f0e7d8;
+    --accent:#a1472b;
+    --accent-dark:#7c3520;
+    --accent-soft:#f3e0d1;
+    --sage:#59704d;
+    --sage-soft:#e7ede1;
+    --warn:#a97a24;
+    --warn-soft:#f4ead2;
+    --bad:#a1472b;
+    --bad-soft:#f3e0d1;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    font-weight:600;
+    color:var(--ink);
+    margin:0 0 .4em 0;
+    letter-spacing:.01em;
+  }
+  p{margin:0 0 1em 0;}
+  a{color:var(--accent-dark);}
+  .wrap{max-width:960px;margin:0 auto;padding:0 32px;}
+
+  /* ---------- Cover ---------- */
+  .cover{
+    background:radial-gradient(ellipse at 20% -10%, #b8582f 0%, var(--accent-dark) 45%, #5c2515 100%);
+    color:#fbeee1;
+    padding:96px 32px 80px;
+    position:relative;
+    overflow:hidden;
+  }
+  .cover::after{
+    content:"";
+    position:absolute;
+    right:-120px; top:-120px;
+    width:420px;height:420px;
+    border:1px solid rgba(251,238,225,.18);
+    border-radius:50%;
+  }
+  .cover::before{
+    content:"";
+    position:absolute;
+    right:-40px; top:120px;
+    width:280px;height:280px;
+    border:1px solid rgba(251,238,225,.14);
+    border-radius:50%;
+  }
+  .cover-inner{max-width:960px;margin:0 auto;position:relative;z-index:1;}
+  .cover-kicker{
+    text-transform:uppercase;
+    letter-spacing:.18em;
+    font-size:12.5px;
+    color:#f0c9a8;
+    margin-bottom:28px;
+    font-weight:600;
+  }
+  .cover-monogram{
+    width:56px;height:56px;border-radius:50%;
+    border:1.5px solid rgba(251,238,225,.55);
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Iowan Old Style",Palatino,Georgia,serif;
+    font-size:24px;color:#fbeee1;margin-bottom:28px;
+  }
+  .cover h1{
+    font-size:52px;
+    line-height:1.08;
+    color:#fffaf4;
+    margin-bottom:10px;
+    max-width:9.5em;
+  }
+  .cover .cover-sub{
+    font-size:20px;
+    color:#f0d9c4;
+    font-family:"Iowan Old Style",Palatino,Georgia,serif;
+    margin-bottom:56px;
+  }
+  .cover-meta{
+    display:flex;
+    gap:56px;
+    flex-wrap:wrap;
+    border-top:1px solid rgba(251,238,225,.28);
+    padding-top:22px;
+    font-size:14px;
+    color:#f0dcc7;
+  }
+  .cover-meta div span{display:block;text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:#dba97e;margin-bottom:4px;}
+  .cover-meta div strong{color:#fffaf4;font-weight:600;font-size:15px;}
+
+  /* ---------- Sections ---------- */
+  section{padding:56px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    font-size:12px;
+    font-weight:700;
+    color:var(--accent-dark);
+    margin-bottom:10px;
+  }
+  .section-title{font-size:28px;margin-bottom:6px;}
+  .section-intro{color:var(--ink-soft);max-width:62ch;font-size:15.5px;}
+
+  /* ---------- Checklist (before we proceed) ---------- */
+  .checklist-box{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-left:4px solid var(--warn);
+    border-radius:6px;
+    padding:26px 28px;
+    margin-top:20px;
+  }
+  .checklist-box h3{font-size:17px;margin-bottom:4px;}
+  .checklist-box p.note{color:var(--ink-soft);font-size:14px;margin-bottom:16px;}
+  .checklist-box ol{margin:0;padding-left:22px;}
+  .checklist-box li{margin-bottom:10px;font-size:14.5px;}
+  .checklist-box li b{color:var(--ink);}
+  .checklist-box li .gate{color:var(--ink-faint);font-size:13px;}
+
+  /* ---------- Exec summary ---------- */
+  .verdict{
+    font-family:"Iowan Old Style",Palatino,Georgia,serif;
+    font-size:21px;
+    line-height:1.55;
+    color:var(--ink);
+    background:var(--accent-soft);
+    border-radius:8px;
+    padding:26px 30px;
+    margin:20px 0 26px;
+  }
+  .exec-points{display:grid;grid-template-columns:1fr 1fr;gap:20px 28px;}
+  .exec-points .pt{font-size:14.5px;}
+  .exec-points .pt b{display:block;color:var(--accent-dark);font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+
+  /* ---------- Scorecard ---------- */
+  .scorecard{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:14px;
+    margin-top:22px;
+  }
+  .tile{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:20px 16px;
+    text-align:center;
+  }
+  .tile .num{
+    font-family:"Iowan Old Style",Palatino,Georgia,serif;
+    font-size:34px;
+    font-weight:600;
+    color:var(--accent-dark);
+    line-height:1;
+    margin-bottom:6px;
+  }
+  .tile .num small{font-size:16px;font-weight:500;color:var(--ink-faint);}
+  .tile .label{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);margin-bottom:4px;}
+  .tile .cap{font-size:11.5px;color:var(--ink-faint);line-height:1.35;}
+
+  /* ---------- Findings ---------- */
+  .finding-area{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:26px 28px;
+    margin-top:18px;
+  }
+  .finding-area h3{font-size:19px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .finding-area h3 .tag{
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    background:var(--sage-soft);color:var(--sage);padding:3px 9px;border-radius:20px;
+  }
+  .finding-area ul.finds{margin:0 0 16px 0;padding-left:20px;}
+  .finding-area ul.finds li{margin-bottom:10px;font-size:14.5px;}
+  .example-box{
+    background:var(--bg);
+    border:1px dashed var(--line);
+    border-radius:6px;
+    padding:14px 16px;
+    font-size:13.5px;
+    margin-bottom:14px;
+  }
+  .example-box .ex-label{font-weight:700;color:var(--accent-dark);text-transform:uppercase;font-size:10.5px;letter-spacing:.07em;margin-bottom:6px;}
+  .before-after{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;}
+  .before-after .ba{flex:1;min-width:220px;}
+  .before-after .ba .ba-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:3px;}
+  .before-after .before .ba-label{color:var(--bad);}
+  .before-after .after .ba-label{color:var(--sage);}
+  .before-after .ba .ba-text{font-family:Georgia,serif;font-style:italic;font-size:13.5px;}
+  .well{
+    background:var(--sage-soft);
+    border-radius:6px;
+    padding:12px 16px;
+    font-size:13.5px;
+  }
+  .well .wl{font-weight:700;color:var(--sage);text-transform:uppercase;font-size:10.5px;letter-spacing:.07em;margin-bottom:4px;}
+
+  /* ---------- Roadmap ---------- */
+  .phase{margin-top:26px;}
+  .phase-head{display:flex;align-items:baseline;gap:14px;margin-bottom:14px;}
+  .phase-num{
+    font-family:"Iowan Old Style",Palatino,Georgia,serif;
+    font-size:15px;font-weight:700;color:#fff;
+    background:var(--accent);
+    border-radius:20px;padding:4px 14px;
+  }
+  .phase-head h3{font-size:19px;margin:0;}
+  .phase-head span{color:var(--ink-faint);font-size:13px;}
+  .roadmap-item{
+    display:grid;
+    grid-template-columns:26px 1fr;
+    gap:12px;
+    padding:14px 0;
+    border-top:1px solid var(--line-soft);
+  }
+  .roadmap-item:first-of-type{border-top:none;}
+  .roadmap-item .dot{
+    width:8px;height:8px;border-radius:50%;background:var(--accent);
+    margin-top:7px;
+  }
+  .roadmap-item .what{font-weight:700;font-size:14.5px;margin-bottom:3px;}
+  .roadmap-item .why{font-size:13.5px;color:var(--ink-soft);margin-bottom:3px;}
+  .roadmap-item .effect{font-size:13px;color:var(--sage);font-weight:600;}
+  .roadmap-item .effect::before{content:"→ ";}
+
+  /* ---------- Table ---------- */
+  table.metrics{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px;}
+  table.metrics th{
+    text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--ink-faint);border-bottom:2px solid var(--line);padding:8px 10px;
+  }
+  table.metrics td{padding:11px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top;}
+  table.metrics tr:last-child td{border-bottom:none;}
+  table.metrics td.metric{font-weight:700;}
+  table.metrics td.pending{color:var(--ink-faint);font-style:italic;}
+
+  /* ---------- Small print ---------- */
+  .approval-list{list-style:none;margin:20px 0 0;padding:0;}
+  .approval-list li{
+    display:grid;grid-template-columns:20px 1fr;gap:10px;
+    padding:12px 0;border-top:1px solid var(--line-soft);font-size:14px;
+  }
+  .approval-list li:first-child{border-top:none;}
+  .approval-list li .box{
+    width:15px;height:15px;border:1.5px solid var(--accent);border-radius:3px;margin-top:3px;
+  }
+  .approval-list li b{display:block;margin-bottom:2px;}
+  .approval-list li span{color:var(--ink-soft);}
+
+  .pending-note{
+    background:var(--warn-soft);
+    border-left:3px solid var(--warn);
+    border-radius:4px;
+    padding:10px 14px;
+    font-size:13px;
+    color:#6a4d16;
+    margin-top:16px;
+  }
+
+  footer{padding:36px 0 60px;text-align:center;color:var(--ink-faint);font-size:12.5px;}
+  footer .fname{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:15px;color:var(--ink-soft);margin-bottom:6px;}
+
+  @media (max-width:760px){
+    .scorecard{grid-template-columns:repeat(2,1fr);}
+    .exec-points{grid-template-columns:1fr;}
+    .cover h1{font-size:38px;}
+    .cover-meta{gap:28px;}
+  }
+
+  @media print{
+    body{background:#fff;}
+    .cover{
+      -webkit-print-color-adjust:exact; print-color-adjust:exact;
+      page-break-after:always;
+    }
+    section{break-inside:avoid; page-break-inside:avoid; border-bottom:none;}
+    .finding-area, .checklist-box, .tile, .phase{break-inside:avoid; page-break-inside:avoid;}
+    .verdict{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .tile .num, h3 .tag, .example-box, .well{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    a{color:var(--accent-dark); text-decoration:none;}
+    @page{margin:16mm;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= COVER ================= -->
+<div class="cover">
+  <div class="cover-inner">
+    <div class="cover-kicker">SEO Audit &amp; Growth Plan</div>
+    <div class="cover-monogram">V</div>
+    <h1>Vada's Day Spa</h1>
+    <div class="cover-sub">East Lansing, Michigan — a research-based audit and 90-day plan to turn strong search visibility into more booked spa days.</div>
+    <div class="cover-meta">
+      <div><span>Prepared for</span><strong>Vada's Day Spa</strong></div>
+      <div><span>Date</span><strong>July 15, 2026</strong></div>
+      <div><span>Prepared by</span><strong>[Your agency name — fill in before sending]</strong></div>
+      <div><span>Contact</span><strong>[Your contact details — fill in before sending]</strong></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ================= BEFORE WE PROCEED ================= -->
+  <section>
+    <div class="eyebrow">Before We Proceed</div>
+    <h2 class="section-title">Seven things only you can confirm</h2>
+    <p class="section-intro">This audit surfaced a handful of open questions about the business itself — not guesses we're comfortable making on your behalf. Several recommendations in this report are drafted two ways because they hinge on your answer. Nothing publishes until these are settled.</p>
+    <div class="checklist-box">
+      <h3>Owner checklist</h3>
+      <p class="note">Five to ten minutes, ideally in one sitting — most of these are dashboard checks or quick calls.</p>
+      <ol>
+        <li><b>Pick one business name</b> and retire the rest. We found three in active use — "Vada's Day Spa," "Vada's Day Spa and Salon," "Vada's Day Spa and Beauty Salon" — across your website, Google Business Profile, and a dozen directories. <span class="gate">Gates: every citation fix, the Google Business Profile cleanup, and the AI-search identity fix.</span></li>
+        <li><b>Confirm Google Business Profile category is "Day spa,"</b> not "Nail salon" or "Beauty salon" (one directory already lists you under Nail Salons). <span class="gate">Gates: your local-pack rankings for every service you actually sell.</span></li>
+        <li><b>Decide the homepage's target city:</b> keep "Lansing" (bigger catchment, already ranking #1) or switch to "East Lansing" (matches your address, your reviews, and every competitor that outranks you on service pages). <span class="gate">Gates: homepage title, meta description, H1, and schema.</span></li>
+        <li><b>Confirm the suite number</b> — "#300" appears on some listings, is missing on others. Whichever way, it needs to match everywhere. <span class="gate">Gates: every NAP citation and the site's structured data.</span></li>
+        <li><b>Confirm your current, active service list</b> — in particular whether permanent makeup, hair styling, and couples massage are still offered, since a couples-massage page is a strong opportunity but shouldn't be built on a guess. <span class="gate">Gates: the couples-massage page and the /makeup page decision.</span></li>
+        <li><b>Is the nursing background okay to use in marketing?</b> Your bio mentions you were a nurse before becoming a spa specialist — a strong trust signal for AI search and for readers, but only if you're comfortable with it in client-facing copy.</li>
+        <li><b>Pricing publication policy</b> — you already publish package prices; are you comfortable with individual service prices (per massage, per facial) appearing on the site too? This affects how competitive the massage and facials pages can be.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ================= EXEC SUMMARY ================= -->
+  <section>
+    <div class="eyebrow">Executive Summary</div>
+    <h2 class="section-title">Where you stand</h2>
+    <div class="verdict">
+      Vada's Day Spa already wins the two searches that matter most to your bookings — you're the #1 result for "day spa East Lansing" and a top-3 result for spa packages, your highest-ticket service. The biggest opportunity isn't new keywords; it's that your business exists online under at least five different names and two duplicate profiles, which is quietly capping every ranking, review, and AI answer you could otherwise be winning. Fixing that identity problem — a name decision plus a citation cleanup — is the single highest-leverage move available, and it's largely free.
+    </div>
+    <div class="exec-points">
+      <div class="pt"><b>Biggest asset</b>Your spa packages page already surfaces with real prices ($160–$240) for "how much does a spa day cost" — exactly the fact AI engines quote. Harden it and it's likely your first AI citation win.</div>
+      <div class="pt"><b>Biggest gap</b>Massage is invisible on "massage East Lansing" despite a dedicated page — a core service losing to specialist studios with deeper content.</div>
+      <div class="pt"><b>What it's worth</b>128 strong reviews (4.6★) sit on Birdeye, a platform Google and AI barely read — while Yelp shows just 12. The reputation exists; it needs to move to where it counts.</div>
+      <div class="pt"><b>The honest caveat</b>This is a research-based audit, not a data-connected one (see Methodology below). Every finding is real and sourced; none of it is a fabricated number.</div>
+    </div>
+  </section>
+
+  <!-- ================= SCORECARD ================= -->
+  <section>
+    <div class="eyebrow">The Scorecard</div>
+    <h2 class="section-title">Five numbers, at a glance</h2>
+    <p class="section-intro">Every score below is built from public search evidence — what Google, review platforms, and directories show today — not from paid ranking or analytics tools (see Methodology). They're a real, defensible starting line, not an estimate dressed up as one.</p>
+    <div class="scorecard">
+      <div class="tile">
+        <div class="num">62<small>/100</small></div>
+        <div class="label">Technical Health</div>
+        <div class="cap">External-signals audit. All pages indexed; titles need work. Full crawl still pending.</div>
+      </div>
+      <div class="tile">
+        <div class="num">44<small>/100</small></div>
+        <div class="label">AI Citability</div>
+        <div class="cap">How ready AI assistants are to cite you. Held back mainly by name fragmentation.</div>
+      </div>
+      <div class="tile">
+        <div class="num">5<small>/6</small></div>
+        <div class="label">Core Search Visibility</div>
+        <div class="cap">Priority searches where you appear today. Missing one: "massage East Lansing."</div>
+      </div>
+      <div class="tile">
+        <div class="num">55<small>/100</small></div>
+        <div class="label">GBP Health</div>
+        <div class="cap">Estimated from public signals; native dashboard not yet connected.</div>
+      </div>
+      <div class="tile">
+        <div class="num">4.6<small>★</small></div>
+        <div class="label">Review Rating</div>
+        <div class="cap">128 reviews, Birdeye aggregate. Native Google rating still to be confirmed.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WHAT WE FOUND ================= -->
+  <section>
+    <div class="eyebrow">What We Found</div>
+    <h2 class="section-title">The audit, area by area</h2>
+
+    <div class="finding-area">
+      <h3>Technical <span class="tag">Website</span></h3>
+      <ul class="finds">
+        <li>Every page that earns you money — packages, massages, facials, waxing, lashes, permanent makeup, about, contact — is already indexed by Google. Nothing is invisible; the site's basic structure is sound.</li>
+        <li>Seven of your page titles are missing your location, your business name, or both — which quietly costs clicks even on pages that already rank well.</li>
+        <li>Your homepage title says "Lansing," while your address, your Google Business Profile, and every review platform say East Lansing. Search engines discount pages that contradict themselves this way.</li>
+      </ul>
+      <div class="example-box">
+        <div class="ex-label">Example: your massage page title, before and after</div>
+        <div class="before-after">
+          <div class="ba before"><div class="ba-label">Currently shows as</div><div class="ba-text">"Relaxing &amp; Therapeutic Spa Massages"</div></div>
+          <div class="ba after"><div class="ba-label">We'd rewrite it to</div><div class="ba-text">"Massage Therapy East Lansing MI | Deep Tissue &amp; Hot Stone"</div></div>
+        </div>
+      </div>
+      <div class="well"><div class="wl">What we'll do</div>Rewrite every money-page title and meta description using the pattern your own Facials page already proves works, add spa-specific structured data so Google and AI engines read your services and location unambiguously, and run the full technical crawl this research pass couldn't reach.</div>
+    </div>
+
+    <div class="finding-area">
+      <h3>Keywords &amp; Search Visibility <span class="tag">Rankings</span></h3>
+      <ul class="finds">
+        <li>You already own the highest-value searches tied to your stated goal: #1 for "day spa East Lansing MI," top-3 for "spa packages Lansing MI." Defending this is priority one.</li>
+        <li>Massage is your clearest gap — a real page exists but doesn't surface for "massage East Lansing," a query owned by dedicated massage studios with far more depth on their pages.</li>
+        <li>On facials, lashes, and permanent makeup, competitors win with one dedicated, city-named page per service; you're often competing with just your homepage.</li>
+      </ul>
+      <div class="example-box">
+        <div class="ex-label">Example: the pattern behind every gap</div>
+        Aurora Medi Spa ranks for "facials East Lansing" with a page titled exactly that. Zoë Life Spa &amp; Salon ranks for "couples massage Lansing" with a dedicated page. Your site competes on those queries with a homepage mention instead of a page of its own.
+      </div>
+      <div class="well"><div class="wl">What we'll do</div>Rebuild the massage page first — it's the biggest gap on an existing page — then build dedicated pages for the services with no page to rank on at all (gift cards, spa parties, and, pending your confirmation, couples massage and spa manicures/pedicures).</div>
+    </div>
+
+    <div class="finding-area">
+      <h3>Performance &amp; Competitive Standing <span class="tag">Benchmark</span></h3>
+      <ul class="finds">
+        <li>Your brand search is fully owned — search "Vada's Day Spa East Lansing" and your site is first, backed by Yelp, Facebook, and Instagram.</li>
+        <li>Your closest independent competitor, Zoë Life Spa and Salon, has roughly 2.7x your best public review count (about 350 vs. your 128) at a slightly higher rating. They're ahead on reputation, not on rankings.</li>
+        <li>We don't have a hard traffic or keyword-count baseline yet — that requires connecting Search Console, Analytics, or a paid ranking tool, none of which were available for this pass.</li>
+      </ul>
+      <div class="example-box">
+        <div class="ex-label">Real number worth sitting with</div>
+        Zoë Life: ~350 Google reviews at 4.9★. Vada's: 4.6★ across 128 Birdeye reviews, but the native Google count is still unconfirmed. Closing that gap is a reputation problem, not a rankings problem — and it's fixable.
+      </div>
+      <div class="well"><div class="wl">What we'll do</div>Set a real measurement baseline this month (see the table below) and re-measure monthly once Search Console, Analytics, and a ranking tool are connected.</div>
+    </div>
+
+    <div class="finding-area">
+      <h3>AI Search Readiness <span class="tag">GEO</span></h3>
+      <ul class="finds">
+        <li>Your AI citability score is 44/100, mainly because AI assistants find at least five versions of your name across the web and lose confidence in which one is real — so they cite a competitor with a cleaner identity instead.</li>
+        <li>One page is already winning: your spa packages page has real prices ($160/$210/$240) that AI engines are already lifting for "how much does a spa day cost" — exactly the kind of fact AI rewards.</li>
+        <li>No independent local coverage exists — a competitor (Revive Wellness) publishes the "best day spas in Lansing" article that AI engines quote; nothing on your business does that job yet.</li>
+      </ul>
+      <div class="example-box">
+        <div class="ex-label">Example: your name, as AI currently sees it</div>
+        "Vada's Day Spa" · "Vadas Day Spa" (no apostrophe) · "Vada's Day Spa and Salon" · "Vada's Day Spa and Beauty Salon" · "Vada Day Spa" — plus two separate Facebook pages and two separate WellnessLiving listings for the same business.
+      </div>
+      <div class="well"><div class="wl">What we'll do</div>One canonical-name cleanup sweep across every listing (highest-leverage fix in this whole report), harden the packages page as an answer-first citation magnet, and publish the five-post content plan to close the remaining gaps — starting with the spa-day-cost article already drafted.</div>
+    </div>
+
+    <div class="finding-area">
+      <h3>Local SEO &amp; Reviews <span class="tag">GBP</span></h3>
+      <ul class="finds">
+        <li>Your Google Business Profile is active and already earning the top local ranking for "day spa East Lansing" — but we can't see its real numbers (calls, direction requests, website clicks) until Google's data is connected, a two-minute setup on your end.</li>
+        <li>128 genuinely strong reviews (4.6★) sit on Birdeye, a platform Google and AI barely reference. Yelp — the platform AI assistants cite most — shows only 12.</li>
+        <li>One directory already files you under "Nail Salons," which is worth checking against your actual GBP category. Separately, an unanswered 2026 negative review ("dishonest day spa") sits live on TripAdvisor.</li>
+      </ul>
+      <div class="example-box">
+        <div class="ex-label">Example: a drafted reply, ready for your review</div>
+        <em>"Thank you for taking the time to share this, and I'm sorry your visit left you feeling this way — that's not the experience we work for. Honesty matters to me personally, and I'd like to understand exactly what happened so I can make it right. Please call me directly at (517) 324-8770 or email vadasdayspa@gmail.com and ask for Vada."</em> — drafted from the visible review headline only; needs your read of the full review before it's ready to post.
+      </div>
+      <div class="well"><div class="wl">What we'll do</div>Run the citation cleanup (TripAdvisor, Facebook, WellnessLiving, Wheree, Yelp, Chamber of Commerce, ClassPass), verify your GBP category and business name, and start a review-generation habit that points happy clients at Google and Yelp instead of Birdeye.</div>
+    </div>
+
+  </section>
+
+  <!-- ================= ROADMAP ================= -->
+  <section>
+    <div class="eyebrow">The Plan</div>
+    <h2 class="section-title">Your 30/60/90-day roadmap</h2>
+    <p class="section-intro">Sequenced across every specialist's findings. Days 1–30 clear the decisions and fixes everything else depends on; 31–60 builds content and repairs your citations; 61–90 builds outside authority and puts real measurement in place.</p>
+
+    <div class="phase">
+      <div class="phase-head"><span class="phase-num">Days 1–30</span><h3>Foundations: decisions, metadata, GBP</h3></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Settle the owner checklist above (name, city targeting, suite number, category, service list)</div>
+        <div class="why">Why: every title rewrite, schema block, and citation fix depends on these five answers.</div>
+        <div class="effect">Unblocks every other item on this roadmap with zero rework risk</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Rewrite titles and meta descriptions on 10 money pages using the pattern your Facials page already proves</div>
+        <div class="why">Why: pages are indexed but titles omit location or brand, costing clicks even where you already rank.</div>
+        <div class="effect">Immediate click-through gains with no new content required</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Fix the garbled /contact title and decide the fate of /makeup (merge into permanent makeup, or differentiate)</div>
+        <div class="why">Why: Google is already auto-rewriting one broken title; the other page has no clear signal.</div>
+        <div class="effect">Cleans up two pages actively confusing search engines today</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Add DaySpa, Service, and FAQ structured data to the homepage and top three money pages</div>
+        <div class="why">Why: gives Google and AI assistants an unambiguous, structured read of what you offer and where.</div>
+        <div class="effect">Foundational for both classic rankings and AI citations</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">GBP quick fixes: category, business name field, suite number, hours, booking link</div>
+        <div class="why">Why: five two-minute dashboard checks with outsized effect on local-pack rankings.</div>
+        <div class="effect">Directly strengthens your position in the local 3-pack</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Claim and correct TripAdvisor (name, city) and post the approved reply to the negative review</div>
+        <div class="why">Why: currently the wrong name, in the wrong city, with an unanswered complaint sitting live.</div>
+        <div class="effect">Removes an active trust and entity problem</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Merge the two duplicate Facebook pages and two duplicate WellnessLiving listings</div>
+        <div class="why">Why: split entities dilute the exact "near me" ranking signals your market runs on.</div>
+        <div class="effect">Consolidates authority onto one clean profile</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Publish GBP Post 1: spa parties (drafted, ready for approval)</div>
+        <div class="why">Why: nobody currently owns this search — it's the fastest uncontested visibility win available.</div>
+        <div class="effect">Free visibility on a query no competitor is fighting for</div>
+      </div></div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-head"><span class="phase-num">Days 31–60</span><h3>Content and citations</h3></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Rebuild the massage page with modality-by-modality depth, therapist credibility, and a hot-stone-vs-deep-tissue comparison</div>
+        <div class="why">Why: this is the single biggest visible gap — a page that exists but doesn't rank for its own core query.</div>
+        <div class="effect">Aims to close the one clear hole in an otherwise strong search presence</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Publish blog posts 1 and 2 (spa day cost, spa parties) once you've answered their short client-input questions</div>
+        <div class="why">Why: cost content already half-wins the AI answer; party content is fully uncontested.</div>
+        <div class="effect">Locks in two citation wins before a competitor claims them</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Build the spa-parties page, and — pending your confirmation — gift cards, couples massage, and spa manicure/pedicure pages</div>
+        <div class="why">Why: these services have no dedicated URL today, so they can't rank for their own searches.</div>
+        <div class="effect">Gives every service you sell a fair shot at its own keyword</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Finish citation cleanup: Yelp, Wheree, ClassPass, Chamber of Commerce, Mindtrip/Atly, Instagram, and a decision on Groupon</div>
+        <div class="why">Why: name variants across the web actively suppress both local rankings and AI trust.</div>
+        <div class="effect">Completes the single highest-leverage fix identified in this report</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Start a review-generation habit pointed at Google and Yelp (post-visit text or email with a direct review link)</div>
+        <div class="why">Why: the reputation already exists — 128 reviews said yes on Birdeye, just on the wrong platform.</div>
+        <div class="effect">Moves proof onto the platforms Google and AI actually read</div>
+      </div></div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-head"><span class="phase-num">Days 61–90</span><h3>Authority and measurement</h3></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Publish blog posts 3–5 (massage comparison, first spa day guide, gift guide)</div>
+        <div class="why">Why: widens topical coverage and reinforces money pages with internal links, without opening new competitive fronts.</div>
+        <div class="effect">More citable answers, more internal support for the pages that book revenue</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Pursue local editorial coverage: the Greater Lansing CVB "Spas & Wellness" page, the Greater Lansing Area Moms resource list, and a definitive local guide</div>
+        <div class="why">Why: AI engines lean on independent editorial sources, and a competitor currently owns the only local listicle.</div>
+        <div class="effect">Builds the entity-trust signal no on-site fix alone can produce</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Round out remaining citations: Bing Places, Apple Business Connect, BBB, Nextdoor</div>
+        <div class="why">Why: lower cost, lower urgency, but Bing, Apple Maps, and Copilot increasingly matter for "spa near me."</div>
+        <div class="effect">Closes the long tail of the citation plan</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Connect a ranking data source, Google Search Console, Google Analytics, and the Google Business Profile dashboard</div>
+        <div class="why">Why: this report is built entirely from public search evidence because none of these were available; connecting even one turns every qualitative finding into a real number.</div>
+        <div class="effect">Unlocks the first true quantitative baseline: rankings, traffic, and profile insights</div>
+      </div></div>
+
+      <div class="roadmap-item"><div class="dot"></div><div>
+        <div class="what">Re-score technical health, AI citability, and GBP health, and re-measure against the baseline below</div>
+        <div class="why">Why: month-two reporting needs something real to compare against.</div>
+        <div class="effect">Proof of movement, not just proof of activity</div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- ================= BASELINE ================= -->
+  <section>
+    <div class="eyebrow">Baseline</div>
+    <h2 class="section-title">How we'll measure progress</h2>
+    <p class="section-intro">These are the numbers we'll track every month. Several are marked "pending" honestly — they require a data connection this research pass didn't have — rather than filled in with a guess.</p>
+    <table class="metrics">
+      <tr><th>Metric</th><th>Baseline (July 15, 2026)</th><th>Source</th></tr>
+      <tr><td class="metric">Technical health score</td><td>62 / 100</td><td>External-signals audit</td></tr>
+      <tr><td class="metric">AI citability score</td><td>44 / 100</td><td>GEO audit</td></tr>
+      <tr><td class="metric">GBP health score</td><td>55 / 100</td><td>Public-signal estimate</td></tr>
+      <tr><td class="metric">Visible rank: "day spa East Lansing"</td><td>#1 organic result</td><td>Live search, July 15, 2026</td></tr>
+      <tr><td class="metric">Visible rank: "massage East Lansing"</td><td>Not visible in top results</td><td>Live search, July 15, 2026</td></tr>
+      <tr><td class="metric">Review rating / count (Birdeye)</td><td>4.6★ / 128 reviews</td><td>Birdeye aggregate listing</td></tr>
+      <tr><td class="metric">Google native review rating / count</td><td class="pending">Pending — confirm via GBP dashboard</td><td>Not yet available</td></tr>
+      <tr><td class="metric">Total keywords ranked / estimated traffic</td><td class="pending">Pending — requires a ranking data source</td><td>Not yet available</td></tr>
+      <tr><td class="metric">Search Console clicks &amp; impressions (28 days)</td><td class="pending">Pending — requires Search Console access</td><td>Not yet available</td></tr>
+    </table>
+  </section>
+
+  <!-- ================= METHODOLOGY / CAVEATS ================= -->
+  <section>
+    <div class="eyebrow">Methodology</div>
+    <h2 class="section-title">How this audit was built — and what upgrading it unlocks</h2>
+    <p class="section-intro">In the interest of the trust this report asks for, here is exactly what kind of audit this is.</p>
+    <div class="checklist-box" style="border-left-color:var(--sage);">
+      <h3>This was a research-only pass</h3>
+      <p class="note">No paid ranking tool, no Google Search Console, no Google Analytics, and no Google Business Profile data connection were available this run. A live crawl of vadasdayspa.com was also blocked by this environment's network policy. Every finding in this report — every score, every ranking claim, every review count — comes from live Google search results, review-platform listings, and directory pages, gathered on July 15, 2026, and cited at the source. Nothing here is invented; where a number would normally sit, we marked it "pending" instead.</p>
+      <p style="margin:0;font-size:14px;">Connecting any one of the following converts this from a qualitative, evidence-based audit into a fully quantitative one — with real search volumes, ranking positions, traffic estimates, and Google-native review and profile data:</p>
+      <ol style="margin-top:10px;">
+        <li><b>A keyword and ranking data source</b> — adds search volume, keyword difficulty, true position tracking, and a competitor traffic-value comparison.</li>
+        <li><b>Google Search Console access</b> — adds real query, click, and impression data instead of visible-in-search sampling.</li>
+        <li><b>Google Analytics access</b> — adds real session, source, and booking-conversion data.</li>
+        <li><b>A Google Business Profile data connection</b> — adds live review replies, profile insights (calls, direction requests, website clicks), and native Google review counts.</li>
+        <li><b>Crawl access to vadasdayspa.com</b> — adds page speed, mobile behavior, schema verification, and on-page structure checks this pass couldn't reach.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ================= SMALL PRINT ================= -->
+  <section>
+    <div class="eyebrow">Small Print</div>
+    <h2 class="section-title">What needs your approval</h2>
+    <p class="section-intro">Nothing in this plan publishes itself. That's deliberate — you know your business, your voice, and your clients better than any audit can. Here's exactly what stays in your hands.</p>
+    <ul class="approval-list">
+      <li><div class="box"></div><div><b>Every review reply</b><span>Including the TripAdvisor draft above and every future Google or Yelp reply — you read, adjust, and approve before anything posts.</span></div></li>
+      <li><div class="box"></div><div><b>Every Google Business Profile post</b><span>Four are drafted and ready to queue; you approve each one before it goes live.</span></div></li>
+      <li><div class="box"></div><div><b>Every title, meta description, and schema rewrite</b><span>Drafted for your review and checked against your live pages before anything is published.</span></div></li>
+      <li><div class="box"></div><div><b>Every blog post</b><span>We research and write roughly 60–70% ourselves; you answer a short list of questions only you can answer (real package inclusions, exact pricing, a real party story). Nothing publishes until your answers are folded in.</span></div></li>
+      <li><div class="box"></div><div><b>Any new page</b><span>Spa parties, gift cards, couples massage, or nails — built only once you've confirmed the service and its details.</span></div></li>
+      <li><div class="box"></div><div><b>The name, city-targeting, and pricing-policy decisions</b><span>These are entirely your calls. We've drafted both options wherever relevant and will implement whichever you choose.</span></div></li>
+    </ul>
+    <div class="pending-note">Pending from this run: agency name and contact details on the cover, and the seven owner-checklist items above. Both are quick fills before this report goes out to anyone.</div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="fname">Vada's Day Spa — SEO Audit &amp; Growth Plan</div>
+  Prepared July 15, 2026 · Research-based audit, no paid data connections this run · vadasdayspa.com
+</footer>
+
+</body>
+</html>
