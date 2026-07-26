@@ -2,7 +2,12 @@ import os
 import sqlite3
 import threading
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+# Override with EBOOK_STUDIO_DATA_DIR to point at a mounted volume in
+# production (container filesystems are ephemeral — without this, the DB,
+# generated files, and session-signing key reset on every deploy/restart).
+DATA_DIR = os.environ.get("EBOOK_STUDIO_DATA_DIR") or os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data"
+)
 DB_PATH = os.path.join(DATA_DIR, "ebook_studio.db")
 COVERS_DIR = os.path.join(DATA_DIR, "covers")
 EXPORTS_DIR = os.path.join(DATA_DIR, "exports")

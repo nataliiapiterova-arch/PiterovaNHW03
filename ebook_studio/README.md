@@ -20,8 +20,10 @@ Deliberately dependency-light — this environment has no PyPI access, so
 everything runs on the Python standard library plus **Jinja2** for templates
 (no third-party auth, web framework, PDF, EPUB, or image library):
 
-- **Web layer**: hand-rolled WSGI router (`app/wsgi_app.py`) served by
-  `wsgiref.simple_server` — no Flask/FastAPI available in this sandbox.
+- **Web layer**: hand-rolled WSGI router (`app/wsgi_app.py`) — no Flask/
+  FastAPI available in this sandbox. `server.py` serves it with
+  `wsgiref.simple_server` for local dev; the `Procfile` serves the same
+  `app.wsgi_app:app` callable with gunicorn in production (e.g. on Railway).
 - **Auth**: PBKDF2-SHA256 password hashing + a small stdlib-only signed
   session-cookie scheme (`app/tokens.py`) — PyJWT was dropped because its
   `cryptography` dependency's native extension doesn't load on this box's
@@ -65,10 +67,43 @@ provider) and lets you download the EPUB/PDF once it's done.
 
 | Variable       | Default | Purpose                                             |
 |----------------|---------|------------------------------------------------------|
-| `HOST`/`PORT`  | `127.0.0.1` / `8000` | dev server bind address              |
+| `HOST`/`PORT`  | `127.0.0.1` / `8000` | dev server bind address (`server.py` / local only — Railway's gunicorn process reads `$PORT` itself) |
 | `AI_PROVIDER`  | `mock`  | `mock` or `claude`                                    |
 | `ANTHROPIC_API_KEY` | —  | required if `AI_PROVIDER=claude`                      |
-| `SECRET_KEY`   | auto-generated, persisted to `data/secret.key` | session-signing key |
+| `SECRET_KEY`   | auto-generated, persisted to `data/secret.key` | session-signing key — **set this explicitly in production** (see below) |
+| `EBOOK_STUDIO_DATA_DIR` | `ebook_studio/data` | where the SQLite DB, covers, exports, and `secret.key` live — **point this at a persistent volume in production** |
+
+## Deploying on Railway
+
+The app ships with a `Procfile` (gunicorn, reading `$PORT`) and a `requirements.txt`
+Railway's Nixpacks builder can use directly — no Dockerfile needed.
+
+1. Push this repo to GitHub (already done on this branch) and create a new
+   Railway project from it.
+2. In the service's **Settings**, set **Root Directory** to `ebook_studio` —
+   Railway then builds/runs from that subfolder and picks up its `Procfile`
+   and `requirements.txt` automatically.
+3. **Attach a volume** (Settings → Volumes), mount path e.g. `/data`. Without
+   this, the container filesystem is wiped on every deploy/restart — that
+   means the SQLite DB (all users and books), generated covers/exports, and
+   the session-signing key all reset. With the volume attached, set the env
+   var `EBOOK_STUDIO_DATA_DIR=/data` (see table above) so the app writes
+   there instead of its default in-repo `data/` folder.
+4. Set environment variables (Settings → Variables):
+   - `SECRET_KEY` — a random 64-char hex string (e.g. `python3 -c "import secrets; print(secrets.token_hex(32))"`).
+     Setting this explicitly (rather than relying on the auto-generated
+     `secret.key` file) means sessions survive redeploys even without the
+     volume.
+   - `AI_PROVIDER=mock` to launch immediately with placeholder book content,
+     or `AI_PROVIDER=claude` + `ANTHROPIC_API_KEY=<your key>` for real
+     AI-generated books.
+5. Deploy, then generate a public domain (Settings → Networking → Generate
+   Domain). Railway builds via Nixpacks (detects Python from
+   `requirements.txt`) and starts the `web` process from the `Procfile`.
+
+**Known limitation at this stage**: SQLite works fine for an MVP but doesn't
+scale to concurrent writers under real traffic — see the production-hardening
+list below for when to move off it (e.g. to Postgres).
 
 ## Tests
 
@@ -101,6 +136,9 @@ XHTML/PDF).
    API yet — written to the Claude API skill's current conventions, but
    unverified outside this sandbox).
 2. Replace the billing stub with real Stripe Checkout + webhook handling.
-3. Move off `wsgiref.simple_server` to a production WSGI server (gunicorn)
-   behind a real web server/TLS terminator.
+3. ~~Move off `wsgiref.simple_server` to a production WSGI server~~ — done:
+   `Procfile` runs gunicorn. Still worth putting a real reverse proxy/CDN in
+   front once traffic justifies it.
 4. Add rate limiting on generation to bound LLM API cost per user.
+5. Move off SQLite once concurrent writes become a bottleneck (a Postgres
+   add-on is a one-click add in Railway) — fine for the MVP, not for scale.
