@@ -25,9 +25,24 @@ def get_user_by_id(user_id):
     return conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
 
 
-def set_user_plan(user_id, plan):
+def set_user_plan(user_id, plan, credits=None, credits_reset_at=None):
     conn = get_conn()
-    conn.execute("UPDATE users SET plan = ? WHERE id = ?", (plan, user_id))
+    if credits is not None:
+        conn.execute(
+            "UPDATE users SET plan = ?, credits = ?, credits_reset_at = ? WHERE id = ?",
+            (plan, credits, credits_reset_at, user_id),
+        )
+    else:
+        conn.execute("UPDATE users SET plan = ? WHERE id = ?", (plan, user_id))
+    conn.commit()
+
+
+def set_user_credits(user_id, credits, credits_reset_at=None):
+    conn = get_conn()
+    conn.execute(
+        "UPDATE users SET credits = ?, credits_reset_at = ? WHERE id = ?",
+        (credits, credits_reset_at, user_id),
+    )
     conn.commit()
 
 
@@ -42,12 +57,17 @@ def decrement_credit(user_id):
 
 # ---- books -------------------------------------------------------------
 
-def create_book(user_id, title, topic, genre, num_chapters):
+def create_book(
+    user_id, title, topic, genre, num_chapters, goal="sell_product",
+    cta_type=None, cta_target=None, author_name=None, profit_path_json=None,
+):
     conn = get_conn()
     cur = conn.execute(
-        "INSERT INTO books (user_id, title, topic, genre, num_chapters, status) "
-        "VALUES (?, ?, ?, ?, ?, 'pending')",
-        (user_id, title, topic, genre, num_chapters),
+        "INSERT INTO books (user_id, title, topic, genre, num_chapters, goal, "
+        "cta_type, cta_target, author_name, profit_path_json, status) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')",
+        (user_id, title, topic, genre, num_chapters, goal, cta_type, cta_target,
+         author_name, profit_path_json),
     )
     conn.commit()
     return cur.lastrowid
@@ -79,6 +99,15 @@ def update_book_outputs(book_id, cover_svg_path=None, epub_path=None, pdf_path=N
     conn.execute(
         "UPDATE books SET cover_svg_path = ?, epub_path = ?, pdf_path = ? WHERE id = ?",
         (cover_svg_path, epub_path, pdf_path, book_id),
+    )
+    conn.commit()
+
+
+def update_book_marketing(book_id, marketing_json):
+    conn = get_conn()
+    conn.execute(
+        "UPDATE books SET marketing_json = ? WHERE id = ?",
+        (marketing_json, book_id),
     )
     conn.commit()
 

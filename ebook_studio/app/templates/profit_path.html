@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}How could this make money? — properebooks.com{% endblock %}
+{% block content %}
+<section class="wizard">
+  <h1>How could this ebook make money?</h1>
+  <p class="lead">Goal: {{ goal_meta.label }} &middot; {{ goal_meta.outcome }}</p>
+
+  <div class="profit-path">
+    <h2>Recommended product concept</h2>
+    <dl>
+      <dt>Title</dt><dd>{{ profit_path.title }}</dd>
+      <dt>Audience</dt><dd>{{ profit_path.audience }}</dd>
+      <dt>Suggested format</dt><dd>{{ profit_path.format_suggestion }}</dd>
+      <dt>Suggested price</dt><dd>${{ profit_path.price_low }}&ndash;${{ profit_path.price_high }}</dd>
+      <dt>Possible upgrades</dt>
+      <dd><ul>{% for item in profit_path.upgrades %}<li>{{ item }}</li>{% endfor %}</ul></dd>
+      <dt>Best sales channels</dt><dd>{{ profit_path.sales_channels | join(', ') }}</dd>
+      <dt>Lead opportunity</dt><dd>{{ profit_path.lead_opportunity }}</dd>
+      <dt>Related affiliate opportunities</dt><dd>{{ profit_path.affiliate_ideas | join(', ') }}</dd>
+    </dl>
+    <p class="fine-print">Prices and outcomes are suggestions based on your topic, not guaranteed earnings.</p>
+  </div>
+
+  <form method="post" action="/books/confirm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="goal" value="{{ goal }}">
+    <input type="hidden" name="topic" value="{{ topic }}">
+    <input type="hidden" name="genre" value="{{ genre }}">
+    <input type="hidden" name="num_chapters" value="{{ num_chapters }}">
+    <input type="hidden" name="author_name" value="{{ author_name }}">
+    <input type="hidden" name="cta_type" value="{{ cta_type or '' }}">
+    <input type="hidden" name="cta_target" value="{{ cta_target or '' }}">
+    <input type="hidden" name="profit_path_json" value="{{ profit_path_json }}">
+
+    <label>Final title <span class="hint">(edit if you'd like something different)</span>
+      <input type="text" name="title" maxlength="120" value="{{ title or profit_path.title }}">
+    </label>
+
+    <button type="submit" class="cta large">Build This Product</button>
+    <a href="/books/new" class="secondary-link">&larr; Start over</a>
+  </form>
+</section>
+{% endblock %}

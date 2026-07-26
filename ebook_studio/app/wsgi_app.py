@@ -6,6 +6,7 @@ routes with path params, signed-cookie sessions, CSRF-protected forms,
 Jinja2 rendering, and safe static/file serving.
 """
 
+import json
 import mimetypes
 import os
 import re
@@ -15,8 +16,10 @@ from urllib.parse import parse_qs
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from . import auth, billing, models
+from .ai_provider import get_provider
 from .database import init_db
 from .generation import start_generation
+from .goals import CTA_OPTIONS, GOAL_ORDER, GOALS, needs_cta
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_DIR = os.path.join(APP_DIR, "templates")
@@ -186,7 +189,7 @@ def dashboard(request):
     if redirect_resp:
         return redirect_resp
     books = models.list_books_for_user(request.user["id"])
-    return render(request, "dashboard.html", books=books)
+    return render(request, "dashboard.html", books=books, goals=GOALS)
 
 
 @route("/books/new", methods=("GET",))
@@ -194,11 +197,26 @@ def new_book_form(request):
     redirect_resp = require_login(request)
     if redirect_resp:
         return redirect_resp
-    return render(request, "new_book.html", error=None)
+    return render(
+        request, "new_book.html", error=None,
+        goals=GOALS, goal_order=GOAL_ORDER, cta_options=CTA_OPTIONS,
+        max_chapters=billing.max_chapters_for(request.user),
+    )
+
+
+def _new_book_form_kwargs(request, error):
+    return dict(
+        error=error, goals=GOALS, goal_order=GOAL_ORDER, cta_options=CTA_OPTIONS,
+        max_chapters=billing.max_chapters_for(request.user),
+    )
 
 
 @route("/books/new", methods=("POST",))
 def new_book_submit(request):
+    """Step 1: turn a topic + goal into a "Profit Path" preview — no
+    credit is spent yet. The user confirms (or edits the suggested title)
+    on the next screen before generation actually starts.
+    """
     redirect_resp = require_login(request)
     if redirect_resp:
         return redirect_resp
@@ -207,28 +225,110 @@ def new_book_submit(request):
 
     user = request.user
     if not billing.can_generate(user):
-        return render(
-            request,
-            "new_book.html",
-            error="You're out of free credits. Upgrade to Pro to generate more books.",
-        )
+        return render(request, "new_book.html", **_new_book_form_kwargs(
+            request, "You're out of credits for this plan. Upgrade to generate more books."
+        ))
 
-    title = request.form.get("title", "").strip()
+    goal = request.form.get("goal", "sell_product").strip()
+    if goal not in GOALS:
+        goal = "sell_product"
     topic = request.form.get("topic", "").strip()
+    title = request.form.get("title", "").strip()
     genre = request.form.get("genre", "self-help").strip()
+    author_name = request.form.get("author_name", "").strip()
+    cta_type = request.form.get("cta_type", "").strip() or None
+    cta_target = request.form.get("cta_target", "").strip() or None
+    if not needs_cta(goal):
+        cta_type, cta_target = None, None
     try:
         num_chapters = int(request.form.get("num_chapters", "8"))
     except ValueError:
         num_chapters = 8
-    num_chapters = max(3, min(num_chapters, 20))
+    num_chapters = max(3, min(num_chapters, billing.max_chapters_for(user)))
 
-    if not title or not topic:
-        return render(request, "new_book.html", error="Title and topic are required.")
+    if not topic:
+        return render(request, "new_book.html", **_new_book_form_kwargs(
+            request, "Tell us what the ebook is about."
+        ))
 
-    book_id = models.create_book(user["id"], title, topic, genre, num_chapters)
+    try:
+        profit_path = get_provider().generate_profit_path(topic, goal)
+    except RuntimeError as exc:
+        return render(request, "new_book.html", **_new_book_form_kwargs(request, str(exc)))
+
+    return render(
+        request, "profit_path.html",
+        profit_path=profit_path, goal=goal, goal_meta=GOALS[goal], topic=topic,
+        title=title, genre=genre, num_chapters=num_chapters, author_name=author_name,
+        cta_type=cta_type, cta_target=cta_target,
+        profit_path_json=json.dumps(profit_path),
+    )
+
+
+@route("/books/confirm", methods=("POST",))
+def new_book_confirm(request):
+    """Step 2: the user clicked "Build This Product" — this is where a
+    credit actually gets spent and generation kicks off.
+    """
+    redirect_resp = require_login(request)
+    if redirect_resp:
+        return redirect_resp
+    if not check_csrf(request):
+        return Response("<h1>403 Invalid CSRF token</h1>", status="403 Forbidden")
+
+    user = request.user
+    if not billing.can_generate(user):
+        return render(request, "new_book.html", **_new_book_form_kwargs(
+            request, "You're out of credits for this plan. Upgrade to generate more books."
+        ))
+
+    goal = request.form.get("goal", "sell_product").strip()
+    if goal not in GOALS:
+        goal = "sell_product"
+    topic = request.form.get("topic", "").strip()
+    genre = request.form.get("genre", "self-help").strip()
+    author_name = request.form.get("author_name", "").strip() or None
+    cta_type = request.form.get("cta_type", "").strip() or None
+    cta_target = request.form.get("cta_target", "").strip() or None
+    if not needs_cta(goal):
+        cta_type, cta_target = None, None
+    profit_path_json = request.form.get("profit_path_json", "")
+    try:
+        suggested_title = json.loads(profit_path_json).get("title", "") if profit_path_json else ""
+    except (ValueError, AttributeError):
+        suggested_title = ""
+    title = request.form.get("title", "").strip() or suggested_title or topic[:80]
+    try:
+        num_chapters = int(request.form.get("num_chapters", "8"))
+    except ValueError:
+        num_chapters = 8
+    num_chapters = max(3, min(num_chapters, billing.max_chapters_for(user)))
+
+    if not topic:
+        return render(request, "new_book.html", **_new_book_form_kwargs(
+            request, "Tell us what the ebook is about."
+        ))
+
+    book_id = models.create_book(
+        user["id"], title, topic, genre, num_chapters, goal=goal,
+        cta_type=cta_type, cta_target=cta_target, author_name=author_name,
+        profit_path_json=profit_path_json or None,
+    )
     billing.consume_credit(user)
     start_generation(book_id)
     return redirect(f"/books/{book_id}")
+
+
+KDP_CHECKLIST = [
+    "Create (or sign in to) your Amazon KDP account at kdp.amazon.com.",
+    "Upload the EPUB as your manuscript file.",
+    "Upload the print-ready PDF cover, or use KDP's cover creator with the SVG as a reference.",
+    "Set your title, subtitle, and author name to match the generated front matter.",
+    "Paste the generated product description into the KDP book description field.",
+    "Choose categories and keywords relevant to your topic.",
+    "Set your price within KDP's royalty tiers (35% or 70%, depending on price and region).",
+    "Preview with KDP's online reviewer before publishing.",
+]
 
 
 @route("/books/<book_id>")
@@ -240,7 +340,13 @@ def book_detail(request, book_id):
     if book is None or book["user_id"] != request.user["id"]:
         return not_found()
     chapters = models.list_chapters(book_id) if book["status"] == "complete" else []
-    return render(request, "book_detail.html", book=book, chapters=chapters)
+    marketing = json.loads(book["marketing_json"]) if book["marketing_json"] else None
+    profit_path = json.loads(book["profit_path_json"]) if book["profit_path_json"] else None
+    return render(
+        request, "book_detail.html", book=book, chapters=chapters,
+        marketing=marketing, profit_path=profit_path, goal_meta=GOALS.get(book["goal"], {}),
+        kdp_checklist=KDP_CHECKLIST,
+    )
 
 
 @route("/books/<book_id>/cover.svg")
@@ -287,11 +393,14 @@ def upgrade(request):
         return redirect_resp
     if not check_csrf(request):
         return Response("<h1>403 Invalid CSRF token</h1>", status="403 Forbidden")
+    plan_key = request.form.get("plan", "").strip()
+    if plan_key not in billing.purchasable_plans():
+        return render(request, "pricing.html", error="Unknown plan.", stripe_enabled=billing.stripe_enabled())
     success_url = _absolute_url(request, "/dashboard?upgraded=1")
     cancel_url = _absolute_url(request, "/pricing")
     try:
-        target = billing.start_upgrade(request.user, success_url, cancel_url)
-    except RuntimeError as exc:
+        target = billing.start_upgrade(request.user, plan_key, success_url, cancel_url)
+    except (RuntimeError, ValueError) as exc:
         return render(request, "pricing.html", error=str(exc), stripe_enabled=True)
     return redirect(target)
 
@@ -340,7 +449,7 @@ def dispatch(environ):
         return serve_static(request, request.path[len("/static/"):])
 
     user, csrf_token = auth.current_user_from_cookie(request.cookie(auth.SESSION_COOKIE_NAME))
-    request.user = user
+    request.user = billing.ensure_credits_fresh(user) if user else None
     request.csrf_token = csrf_token
 
     for method, pattern, param_names, handler in _ROUTES:

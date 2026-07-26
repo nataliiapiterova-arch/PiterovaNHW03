@@ -34,7 +34,10 @@ def _request(path, data, api_key):
         raise RuntimeError(f"Could not reach Stripe: {exc.reason}") from exc
 
 
-def create_checkout_session(api_key, price_id, customer_email, client_reference_id, success_url, cancel_url):
+def create_checkout_session(
+    api_key, price_id, customer_email, client_reference_id, success_url, cancel_url,
+    metadata=None,
+):
     """Creates a subscription Checkout Session and returns its hosted URL."""
     data = {
         "mode": "subscription",
@@ -45,6 +48,8 @@ def create_checkout_session(api_key, price_id, customer_email, client_reference_
         "success_url": success_url,
         "cancel_url": cancel_url,
     }
+    for key, value in (metadata or {}).items():
+        data[f"metadata[{key}]"] = str(value)
     session = _request("checkout/sessions", data, api_key)
     return session["url"]
 

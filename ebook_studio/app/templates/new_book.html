@@ -1,31 +1,80 @@
 {% extends "base.html" %}
-{% block title %}New book — properebooks.com{% endblock %}
+{% block title %}What do you want your ebook to accomplish? — properebooks.com{% endblock %}
 {% block content %}
-<section class="auth-form">
-  <h1>Generate a new book</h1>
+<section class="wizard">
+  <h1>What do you want your ebook to accomplish?</h1>
+  <p class="lead">Your answer changes what gets generated — a different book, different sales assets, a different call to action.</p>
   {% if error %}<p class="error">{{ error }}</p>{% endif %}
-  <form method="post" action="/books/new">
+
+  <form method="post" action="/books/new" id="new-book-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <label>Title
-      <input type="text" name="title" required maxlength="120" placeholder="e.g. Gut Health for Busy Professionals">
+
+    <div class="goal-grid">
+      {% for key in goal_order %}
+      <label class="goal-card">
+        <input type="radio" name="goal" value="{{ key }}" data-needs-cta="{{ 'true' if goals[key].needs_cta else 'false' }}"
+               {% if key == 'sell_product' %}checked{% endif %} onchange="updateCtaVisibility()">
+        <span class="goal-card-label">{{ goals[key].label }}</span>
+        <span class="goal-card-outcome">{{ goals[key].outcome }}</span>
+      </label>
+      {% endfor %}
+    </div>
+
+    <label>What's the ebook about?
+      <textarea name="topic" required maxlength="300" rows="3"
+                placeholder="e.g. starting a residential cleaning business"></textarea>
     </label>
-    <label>Topic
-      <input type="text" name="topic" required maxlength="200" placeholder="e.g. improving gut health with small daily habits">
-    </label>
-    <label>Genre
-      <select name="genre">
-        <option value="self-help">Self-help</option>
-        <option value="business">Business</option>
-        <option value="finance">Finance</option>
-        <option value="health">Health</option>
-        <option value="technology">Technology</option>
-        <option value="fiction">Fiction</option>
-      </select>
-    </label>
-    <label>Number of chapters
-      <input type="number" name="num_chapters" min="3" max="20" value="8">
-    </label>
-    <button type="submit" class="cta">Generate book</button>
+
+    <details class="more-options">
+      <summary>More options</summary>
+
+      <label>Title <span class="hint">(optional — we'll suggest one based on your topic)</span>
+        <input type="text" name="title" maxlength="120">
+      </label>
+
+      <label>Genre
+        <select name="genre">
+          <option value="self-help">Self-help</option>
+          <option value="business">Business</option>
+          <option value="finance">Finance</option>
+          <option value="health">Health</option>
+          <option value="technology">Technology</option>
+          <option value="fiction">Fiction</option>
+        </select>
+      </label>
+
+      <label>Number of chapters <span class="hint">(up to {{ max_chapters }} on your plan)</span>
+        <input type="number" name="num_chapters" min="3" max="{{ max_chapters }}" value="{{ [8, max_chapters]|min }}">
+      </label>
+
+      <label>Author name <span class="hint">(shown on the cover and bio — optional)</span>
+        <input type="text" name="author_name" maxlength="120">
+      </label>
+
+      <div id="cta-fields">
+        <label>Call to action
+          <select name="cta_type">
+            <option value="">None</option>
+            {% for key, label in cta_options %}
+            <option value="{{ key }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>CTA link or detail <span class="hint">(e.g. a booking URL, your email, or a website)</span>
+          <input type="text" name="cta_target" maxlength="300">
+        </label>
+      </div>
+    </details>
+
+    <button type="submit" class="cta large">See How It Could Make Money</button>
   </form>
 </section>
+<script>
+function updateCtaVisibility() {
+  var selected = document.querySelector('input[name="goal"]:checked');
+  var ctaFields = document.getElementById('cta-fields');
+  ctaFields.style.display = (selected && selected.dataset.needsCta === 'true') ? 'block' : 'none';
+}
+updateCtaVisibility();
+</script>
 {% endblock %}

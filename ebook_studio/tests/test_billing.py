@@ -73,39 +73,55 @@ class BillingTests(unittest.TestCase):
     def test_stripe_disabled_by_default(self):
         self.assertFalse(billing.stripe_enabled())
 
-    def test_stripe_enabled_requires_both_vars(self):
+    def test_stripe_enabled_requires_secret_key(self):
         os.environ["STRIPE_SECRET_KEY"] = "sk_test_x"
-        self.assertFalse(billing.stripe_enabled())
-        os.environ["STRIPE_PRICE_ID"] = "price_x"
         self.assertTrue(billing.stripe_enabled())
 
     def test_start_upgrade_falls_back_without_stripe_config(self):
         user_id = models.create_user("demo@example.com", "hash", "salt")
         user = models.get_user_by_id(user_id)
-        target = billing.start_upgrade(user, "https://example.com/success", "https://example.com/cancel")
+        target = billing.start_upgrade(
+            user, "creator", "https://example.com/success", "https://example.com/cancel"
+        )
         self.assertEqual(target, "https://example.com/success")
-        self.assertEqual(models.get_user_by_id(user_id)["plan"], "pro")
+        updated = models.get_user_by_id(user_id)
+        self.assertEqual(updated["plan"], "creator")
+        self.assertEqual(updated["credits"], billing.PLANS["creator"]["monthly_credits"])
 
-    def test_process_webhook_upgrades_user_on_valid_signature(self):
+    def test_start_upgrade_rejects_non_purchasable_plan(self):
+        user_id = models.create_user("badplan@example.com", "hash", "salt")
+        user = models.get_user_by_id(user_id)
+        with self.assertRaises(ValueError):
+            billing.start_upgrade(user, "free", "https://example.com/success", "https://example.com/cancel")
+
+    def test_process_webhook_upgrades_user_to_plan_from_metadata(self):
         os.environ["STRIPE_WEBHOOK_SECRET"] = WEBHOOK_SECRET
         user_id = models.create_user("webhook@example.com", "hash", "salt")
         payload = json.dumps({
             "type": "checkout.session.completed",
-            "data": {"object": {"client_reference_id": str(user_id)}},
+            "data": {"object": {
+                "client_reference_id": str(user_id),
+                "metadata": {"plan": "publisher"},
+            }},
         }).encode("utf-8")
         header = _sign(payload)
 
         result = billing.process_webhook(payload, header)
 
         self.assertTrue(result)
-        self.assertEqual(models.get_user_by_id(user_id)["plan"], "pro")
+        updated = models.get_user_by_id(user_id)
+        self.assertEqual(updated["plan"], "publisher")
+        self.assertEqual(updated["credits"], billing.PLANS["publisher"]["monthly_credits"])
 
     def test_process_webhook_rejects_bad_signature(self):
         os.environ["STRIPE_WEBHOOK_SECRET"] = WEBHOOK_SECRET
         user_id = models.create_user("badsig@example.com", "hash", "salt")
         payload = json.dumps({
             "type": "checkout.session.completed",
-            "data": {"object": {"client_reference_id": str(user_id)}},
+            "data": {"object": {
+                "client_reference_id": str(user_id),
+                "metadata": {"plan": "creator"},
+            }},
         }).encode("utf-8")
 
         result = billing.process_webhook(payload, "t=1,v1=deadbeef")
@@ -116,6 +132,26 @@ class BillingTests(unittest.TestCase):
     def test_process_webhook_without_secret_configured_returns_false(self):
         payload = b'{"type": "checkout.session.completed"}'
         self.assertFalse(billing.process_webhook(payload, _sign(payload)))
+
+    def test_ensure_credits_fresh_leaves_free_plan_alone(self):
+        user_id = models.create_user("free@example.com", "hash", "salt")
+        user = models.get_user_by_id(user_id)
+        refreshed = billing.ensure_credits_fresh(user)
+        self.assertEqual(refreshed["credits"], 1)
+
+    def test_ensure_credits_fresh_resets_paid_plan_after_reset_date(self):
+        import datetime as dt
+
+        user_id = models.create_user("paid@example.com", "hash", "salt")
+        billing.upgrade_to_plan(user_id, "creator")
+        models.decrement_credit(user_id)
+        models.decrement_credit(user_id)
+        past = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)).isoformat()
+        models.set_user_credits(user_id, 0, past)
+
+        refreshed = billing.ensure_credits_fresh(models.get_user_by_id(user_id))
+
+        self.assertEqual(refreshed["credits"], billing.PLANS["creator"]["monthly_credits"])
 
 
 if __name__ == "__main__":

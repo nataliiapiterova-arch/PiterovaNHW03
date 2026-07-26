@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
     salt TEXT NOT NULL,
     plan TEXT NOT NULL DEFAULT 'free',
     credits INTEGER NOT NULL DEFAULT 1,
+    credits_reset_at TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -32,11 +33,17 @@ CREATE TABLE IF NOT EXISTS books (
     topic TEXT NOT NULL,
     genre TEXT NOT NULL,
     num_chapters INTEGER NOT NULL,
+    goal TEXT NOT NULL DEFAULT 'sell_product',
+    cta_type TEXT,
+    cta_target TEXT,
+    author_name TEXT,
     status TEXT NOT NULL DEFAULT 'pending',
     error TEXT,
     cover_svg_path TEXT,
     epub_path TEXT,
     pdf_path TEXT,
+    profit_path_json TEXT,
+    marketing_json TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

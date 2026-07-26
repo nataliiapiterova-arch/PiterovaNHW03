@@ -65,9 +65,11 @@ class AuthTests(unittest.TestCase):
         billing.consume_credit(user)
         user = models.get_user_by_id(user_id)
         self.assertFalse(billing.can_generate(user))
-        billing.upgrade_to_pro(user_id)
+        billing.upgrade_to_plan(user_id, "creator")
         user = models.get_user_by_id(user_id)
         self.assertTrue(billing.can_generate(user))
+        self.assertEqual(user["plan"], "creator")
+        self.assertEqual(user["credits"], billing.PLANS["creator"]["monthly_credits"])
 
 
 if __name__ == "__main__":

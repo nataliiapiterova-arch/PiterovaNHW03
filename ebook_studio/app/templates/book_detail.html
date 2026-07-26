@@ -13,11 +13,12 @@
     {% endif %}
     <div>
       <h1>{{ book.title }}</h1>
-      <p class="meta">{{ book.genre }} &middot; {{ book.num_chapters }} chapters</p>
+      {% if marketing %}<p class="subtitle">{{ marketing.subtitle }}</p>{% endif %}
+      <p class="meta">{{ book.genre }} &middot; {{ book.num_chapters }} chapters &middot; goal: {{ goal_meta.short_label }}</p>
       <p class="status status-{{ book.status }}">Status: {{ book.status }}</p>
 
       {% if book.status == "pending" or book.status == "generating" %}
-        <p>Generating your book now — this page refreshes automatically.</p>
+        <p>Building your book, cover, and launch package now — this page refreshes automatically.</p>
       {% elif book.status == "failed" %}
         <p class="error">Generation failed: {{ book.error }}</p>
       {% elif book.status == "complete" %}
@@ -28,6 +29,115 @@
       {% endif %}
     </div>
   </div>
+
+  {% if book.status == "complete" and marketing %}
+  <div class="launch">
+    <h2>Your ebook is ready. What would you like to do next?</h2>
+    <div class="launch-grid">
+      <a class="launch-card" href="#sales-package">
+        <strong>Sell it on my own checkout page</strong>
+        <span>Sales page, price range and checkout copy — ready to paste in.</span>
+      </a>
+      <a class="launch-card" href="#kdp">
+        <strong>Prepare it for Amazon KDP</strong>
+        <span>Step-by-step checklist for publishing this book on KDP.</span>
+      </a>
+      <a class="launch-card" href="#sales-package">
+        <strong>Create a Gumroad/Payhip listing</strong>
+        <span>Use the product description and checkout copy below.</span>
+      </a>
+      <a class="launch-card" href="#monetization">
+        <strong>Use it as a lead magnet</strong>
+        <span>{{ marketing.lead_magnet_note }}</span>
+      </a>
+      <a class="launch-card" href="#promotion">
+        <strong>Generate promotional content</strong>
+        <span>Emails, social posts and video scripts, already written.</span>
+      </a>
+      <div class="launch-card launch-card-disabled">
+        <strong>Create an audiobook</strong>
+        <span>Not available yet — needs text-to-speech, on the roadmap.</span>
+      </div>
+      <div class="launch-card launch-card-disabled">
+        <strong>Translate it</strong>
+        <span>Not available yet — needs a translation pipeline, on the roadmap.</span>
+      </div>
+      <div class="launch-card launch-card-disabled">
+        <strong>Create an upsell or revised edition</strong>
+        <span>Not available yet — for now, generate a new book with a follow-up topic.</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="sales-package" class="package-section">
+    <h2>Sales Package</h2>
+    <p><strong>Product description:</strong> {{ marketing.product_description }}</p>
+    <p><strong>Suggested price:</strong> ${{ marketing.price_low }}&ndash;${{ marketing.price_high }} <span class="fine-print">(a suggestion, not a guarantee)</span></p>
+    <p><strong>Checkout description:</strong> {{ marketing.checkout_description }}</p>
+    <details>
+      <summary>Long-form sales page</summary>
+      <div class="prose">{{ marketing.sales_page }}</div>
+    </details>
+    <details>
+      <summary>FAQ</summary>
+      <dl>
+        {% for item in marketing.faq %}
+        <dt>{{ item.q }}</dt><dd>{{ item.a }}</dd>
+        {% endfor %}
+      </dl>
+    </details>
+  </div>
+
+  <div id="monetization" class="package-section">
+    <h2>Monetization Package</h2>
+    <p><strong>Recommended sales channels:</strong> {{ marketing.channels | join(', ') }}</p>
+    <p><strong>Lead-magnet version:</strong> {{ marketing.lead_magnet_note }}</p>
+    <details>
+      <summary>Upsell &amp; bundle ideas</summary>
+      <ul>
+        {% for item in marketing.upsells %}<li>{{ item }}</li>{% endfor %}
+        {% for item in marketing.bundles %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    </details>
+    <details>
+      <summary>Affiliate-product ideas</summary>
+      <ul>{% for item in marketing.affiliates %}<li>{{ item }}</li>{% endfor %}</ul>
+    </details>
+    <details>
+      <summary>Repurposing plan</summary>
+      <ul>{% for item in marketing.repurposing_plan %}<li>{{ item }}</li>{% endfor %}</ul>
+    </details>
+    <details>
+      <summary>30-day promotion calendar</summary>
+      <ol class="calendar">{% for item in marketing.promo_calendar %}<li>{{ item }}</li>{% endfor %}</ol>
+    </details>
+  </div>
+
+  <div id="promotion" class="package-section">
+    <h2>Promotional Content</h2>
+    <details>
+      <summary>Social posts ({{ marketing.social_posts | length }})</summary>
+      <ul>{% for post in marketing.social_posts %}<li>{{ post }}</li>{% endfor %}</ul>
+    </details>
+    <details>
+      <summary>Promotional emails ({{ marketing.promo_emails | length }})</summary>
+      {% for email in marketing.promo_emails %}
+      <div class="email-item"><strong>{{ email.subject }}</strong><p>{{ email.body }}</p></div>
+      {% endfor %}
+    </details>
+    <details>
+      <summary>Short video scripts ({{ marketing.video_scripts | length }})</summary>
+      {% for video in marketing.video_scripts %}
+      <div class="email-item"><strong>{{ video.title }}</strong><p>{{ video.script }}</p></div>
+      {% endfor %}
+    </details>
+  </div>
+
+  <div id="kdp" class="package-section">
+    <h2>Prepare for Amazon KDP</h2>
+    <ol>{% for step in kdp_checklist %}<li>{{ step }}</li>{% endfor %}</ol>
+  </div>
+  {% endif %}
 
   {% if chapters %}
   <div class="chapters">

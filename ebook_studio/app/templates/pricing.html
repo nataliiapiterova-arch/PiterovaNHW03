@@ -2,28 +2,33 @@
 {% block title %}Pricing — properebooks.com{% endblock %}
 {% block content %}
 <section class="pricing">
-  <h1>Simple pricing</h1>
+  <h1>Generous creation limits, not "unlimited"</h1>
+  <p class="lead">
+    A complete ebook (outline, full chapters, cover, sales page, promo content)
+    uses real AI resources to build — so instead of an "unlimited" plan that's
+    easy to abuse, every paid tier gets a solid monthly allotment of complete
+    books.
+  </p>
   {% if error %}<p class="error">{{ error }}</p>{% endif %}
   <div class="plans">
     {% for key, plan in plans.items() %}
-    <div class="plan-card {% if key == 'pro' %}highlight{% endif %}">
+    <div class="plan-card {% if key == 'creator' %}highlight{% endif %}">
       <h2>{{ plan.label }}</h2>
       <p class="price">${{ plan.price_usd }}<span>/mo</span></p>
       <p class="limit">
-        {% if plan.monthly_books %}
-          {{ plan.monthly_books }} book{{ 's' if plan.monthly_books != 1 else '' }}
-        {% else %}
-          Unlimited books
-        {% endif %}
+        {{ plan.monthly_credits }} book{{ 's' if plan.monthly_credits != 1 else '' }}
+        {{ 'per month' if plan.refreshes else '(one-time)' }}
       </p>
+      <p class="plan-description">{{ plan.description }}</p>
       {% if user %}
-        {% if key == 'pro' and user.plan != 'pro' %}
+        {% if key == user.plan %}
+        <p class="current-plan">Your current plan</p>
+        {% elif plan.price_usd > 0 %}
         <form action="/billing/upgrade" method="post">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit" class="cta">Upgrade to Pro</button>
+          <input type="hidden" name="plan" value="{{ key }}">
+          <button type="submit" class="cta">Upgrade to {{ plan.label }}</button>
         </form>
-        {% elif key == user.plan %}
-        <p class="current-plan">Your current plan</p>
         {% endif %}
       {% else %}
         <a href="/signup" class="cta">Get started</a>
@@ -32,6 +37,7 @@
     {% endfor %}
   </div>
   <p class="fine-print">
+    Additional credits can be purchased as needed.
     {% if stripe_enabled %}
       Payments are processed securely by Stripe.
     {% else %}
