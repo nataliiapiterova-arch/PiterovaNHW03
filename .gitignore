@@ -205,3 +205,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# video_agent generated content and local config
+video_agent/projects/*
+!video_agent/projects/.gitkeep
+video_agent/avatar_config.json
+video_agent/assets/music/*
+!video_agent/assets/music/.gitkeep

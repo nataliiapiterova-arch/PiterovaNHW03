@@ -4,6 +4,8 @@ A simple Python project uploaded from the assignment.
 
 ## Files
 - `PiterovaNHW03.py`
+- `video_agent/` — agent-driven pipeline for AI promo videos with a
+  recurring AI presenter. See [`video_agent/README.md`](video_agent/README.md).
 
 ## How to run
 
