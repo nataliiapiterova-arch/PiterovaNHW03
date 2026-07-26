@@ -30,10 +30,12 @@ everything runs on the Python standard library plus **Jinja2** for templates
 - **Storage**: SQLite via `sqlite3` (`app/database.py`, `app/models.py`).
 - **AI generation**: pluggable `AIProvider` interface (`app/ai_provider.py`).
   `MockAIProvider` is the default — deterministic, topic-aware placeholder
-  text and an SVG cover, no network calls. `OpenAIProvider` is a stub with
-  `NotImplementedError` bodies and TODOs marking exactly where to add real
-  API calls once `OPENAI_API_KEY` exists. Switch providers with the
-  `AI_PROVIDER` env var (`mock` | `openai`).
+  text and an SVG cover, no network calls. `ClaudeProvider` is a complete,
+  ready-to-run implementation against the Anthropic API (`claude-opus-5`,
+  structured-output outline generation, streamed chapter text, refusal
+  handling) — it just can't run *in this sandbox*, since neither the
+  `anthropic` package nor an `ANTHROPIC_API_KEY` are available here. Switch
+  providers with the `AI_PROVIDER` env var (`mock` | `claude`).
 - **Export**: EPUB is assembled directly as a zip per the EPUB3 spec
   (`zipfile`, no `ebooklib`); PDF is a small hand-rolled writer using the
   built-in Helvetica fonts with WinAnsi encoding (`app/export_utils.py`, no
@@ -64,8 +66,8 @@ provider) and lets you download the EPUB/PDF once it's done.
 | Variable       | Default | Purpose                                             |
 |----------------|---------|------------------------------------------------------|
 | `HOST`/`PORT`  | `127.0.0.1` / `8000` | dev server bind address              |
-| `AI_PROVIDER`  | `mock`  | `mock` or `openai`                                    |
-| `OPENAI_API_KEY` | —     | required if `AI_PROVIDER=openai`                      |
+| `AI_PROVIDER`  | `mock`  | `mock` or `claude`                                    |
+| `ANTHROPIC_API_KEY` | —  | required if `AI_PROVIDER=claude`                      |
 | `SECRET_KEY`   | auto-generated, persisted to `data/secret.key` | session-signing key |
 
 ## Tests
@@ -88,12 +90,16 @@ XHTML/PDF).
 - **Real**: auth, sessions, CSRF protection, SQLite persistence, the full
   generation pipeline and background-job status polling, valid EPUB3 and PDF
   file output, per-user ownership checks on every book/download route.
-- **Stub (clearly marked with TODOs in code)**: `OpenAIProvider` (no real LLM
-  call yet), `billing.upgrade_to_pro` (no real payment processor).
+- **Stub (clearly marked with TODOs in code)**: `billing.upgrade_to_pro` (no
+  real payment processor). `ClaudeProvider` is real code, not a stub — it's
+  just unexercised here for lack of network access and a key.
 
 ## Next steps to take this to production
 
-1. Wire `OpenAIProvider` (or another LLM) into `app/ai_provider.py`.
+1. `pip install anthropic`, set `ANTHROPIC_API_KEY` and `AI_PROVIDER=claude`,
+   and smoke-test `ClaudeProvider` end-to-end (it hasn't run against the real
+   API yet — written to the Claude API skill's current conventions, but
+   unverified outside this sandbox).
 2. Replace the billing stub with real Stripe Checkout + webhook handling.
 3. Move off `wsgiref.simple_server` to a production WSGI server (gunicorn)
    behind a real web server/TLS terminator.

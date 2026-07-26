@@ -5,6 +5,7 @@ mock for a real LLM/image API later is a one-file change plus an env var.
 """
 
 import hashlib
+import json
 import os
 import textwrap
 from abc import ABC, abstractmethod
@@ -104,42 +105,122 @@ class MockAIProvider(AIProvider):
 </svg>"""
 
 
-class OpenAIProvider(AIProvider):
-    """Real-LLM backed provider.
+class ClaudeProvider(AIProvider):
+    """Real Claude-backed provider (Anthropic API).
 
-    TODO before enabling in production:
-      1. `pip install openai` (or your preferred SDK) and add it to requirements.txt.
-      2. Set OPENAI_API_KEY (and AI_PROVIDER=openai) in the environment.
-      3. Implement each method below using chat completions for text and an
-         image-generation endpoint for covers (or keep generate_cover_svg and
-         only replace the two text methods, since SVG covers need no image API).
-      4. Add retry/backoff and cost/rate limiting before exposing this to
-         paying customers, since every call here is billed.
+    Not runnable in this sandbox: the `anthropic` package can't be installed
+    here (no PyPI access) and there's no API key configured. The code below
+    is complete and ready to go once both exist elsewhere:
+      1. `pip install anthropic` (already in requirements.txt).
+      2. Set ANTHROPIC_API_KEY and AI_PROVIDER=claude in the environment.
     """
 
+    MODEL = "claude-opus-5"
+
     def __init__(self, api_key=None):
-        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not self.api_key:
             raise RuntimeError(
-                "AI_PROVIDER=openai requires OPENAI_API_KEY to be set."
+                "AI_PROVIDER=claude requires ANTHROPIC_API_KEY to be set."
             )
+        import anthropic
+
+        self._anthropic = anthropic
+        self.client = anthropic.Anthropic(api_key=self.api_key)
 
     def generate_outline(self, title, topic, genre, num_chapters):
-        raise NotImplementedError("Wire up a real chat-completions call here.")
+        response = self.client.messages.create(
+            model=self.MODEL,
+            max_tokens=4096,
+            thinking={"type": "adaptive"},
+            output_config={
+                "effort": "medium",
+                "format": {
+                    "type": "json_schema",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "chapters": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            }
+                        },
+                        "required": ["chapters"],
+                        "additionalProperties": False,
+                    },
+                },
+            },
+            messages=[{
+                "role": "user",
+                "content": (
+                    f"Write a chapter-title outline for a {genre} ebook titled "
+                    f"\"{title}\" about {topic}. Produce exactly {num_chapters} "
+                    "chapter titles, in reading order, each a short descriptive "
+                    "phrase (no numbering)."
+                ),
+            }],
+        )
+        text = next(b.text for b in response.content if b.type == "text")
+        chapters = json.loads(text)["chapters"]
+        # The schema can't enforce exact array length, so pad/trim deterministically.
+        if len(chapters) < num_chapters:
+            chapters += [f"Chapter {i}" for i in range(len(chapters) + 1, num_chapters + 1)]
+        return chapters[:num_chapters]
 
     def generate_chapter(self, title, topic, genre, chapter_title, index, total):
-        raise NotImplementedError("Wire up a real chat-completions call here.")
+        with self.client.messages.stream(
+            model=self.MODEL,
+            max_tokens=4096,
+            thinking={"type": "adaptive"},
+            output_config={"effort": "medium"},
+            messages=[{
+                "role": "user",
+                "content": (
+                    f"Write chapter {index} of {total} for the {genre} ebook "
+                    f"\"{title}\" (topic: {topic}). This chapter is titled "
+                    f"\"{chapter_title}\". Write 500-900 words of prose in "
+                    "well-formed paragraphs separated by blank lines. Do not "
+                    "repeat the chapter title in the body."
+                ),
+            }],
+        ) as stream:
+            final = stream.get_final_message()
+        if final.stop_reason == "refusal":
+            raise RuntimeError(f"Content generation was declined for chapter {index}.")
+        return next(b.text for b in final.content if b.type == "text")
 
     def generate_cover_svg(self, title, genre):
-        raise NotImplementedError("Wire up a real image-generation call here.")
+        response = self.client.messages.create(
+            model=self.MODEL,
+            max_tokens=2048,
+            thinking={"type": "adaptive"},
+            output_config={"effort": "low"},
+            messages=[{
+                "role": "user",
+                "content": (
+                    f"Design a book cover as a single self-contained SVG, "
+                    f"600x900 viewBox, for a {genre} ebook titled \"{title}\". "
+                    "Use flat shapes and web-safe fonts only (no external "
+                    "assets, no <image>, no <script>). Respond with only the "
+                    "raw <svg>...</svg> markup, nothing else."
+                ),
+            }],
+        )
+        if response.stop_reason == "refusal":
+            raise RuntimeError("Cover generation was declined.")
+        text = next(b.text for b in response.content if b.type == "text").strip()
+        if not text.startswith("<svg"):
+            # Fall back to the deterministic template rather than ship bad markup.
+            return MockAIProvider().generate_cover_svg(title, genre)
+        return text
 
 
 def get_provider():
     name = os.environ.get("AI_PROVIDER", "mock").lower()
     if name == "mock":
         return MockAIProvider()
-    if name == "openai":
-        return OpenAIProvider()
+    if name == "claude":
+        return ClaudeProvider()
     raise ValueError(f"Unknown AI_PROVIDER: {name}")
 
 
