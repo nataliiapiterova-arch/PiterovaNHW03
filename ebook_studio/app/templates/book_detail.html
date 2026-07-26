@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }} — properebooks.com{% endblock %}
+{% block head_extra %}
+{% if book.status in ("pending", "generating") %}<meta http-equiv="refresh" content="2">{% endif %}
+{% endblock %}
+{% block content %}
+<section class="book-detail">
+  <div class="book-detail-header">
+    {% if book.cover_svg_path and book.status == "complete" %}
+      <img class="cover" src="/books/{{ book.id }}/cover.svg" alt="Cover for {{ book.title }}">
+    {% else %}
+      <div class="cover cover-placeholder"></div>
+    {% endif %}
+    <div>
+      <h1>{{ book.title }}</h1>
+      <p class="meta">{{ book.genre }} &middot; {{ book.num_chapters }} chapters</p>
+      <p class="status status-{{ book.status }}">Status: {{ book.status }}</p>
+
+      {% if book.status == "pending" or book.status == "generating" %}
+        <p>Generating your book now — this page refreshes automatically.</p>
+      {% elif book.status == "failed" %}
+        <p class="error">Generation failed: {{ book.error }}</p>
+      {% elif book.status == "complete" %}
+        <div class="downloads">
+          <a class="cta" href="/books/{{ book.id }}/download/epub">Download EPUB</a>
+          <a class="cta secondary" href="/books/{{ book.id }}/download/pdf">Download PDF</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if chapters %}
+  <div class="chapters">
+    <h2>Chapters</h2>
+    {% for chapter in chapters %}
+    <details>
+      <summary>{{ chapter.idx }}. {{ chapter.title }}</summary>
+      <div class="chapter-body">
+        {% for para in chapter.content.split('\n\n') %}
+          <p>{{ para }}</p>
+        {% endfor %}
+      </div>
+    </details>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

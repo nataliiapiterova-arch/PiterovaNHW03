@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — properebooks.com{% endblock %}
+{% block content %}
+<section class="dashboard">
+  <div class="dashboard-header">
+    <h1>Your books</h1>
+    <div class="dashboard-header-right">
+      <span class="plan-badge">{{ user.plan|capitalize }} plan
+        {% if user.plan != 'pro' %}&middot; {{ user.credits }} credit{{ 's' if user.credits != 1 else '' }} left{% endif %}
+      </span>
+      <a href="/books/new" class="cta">+ New book</a>
+    </div>
+  </div>
+
+  {% if not books %}
+  <p class="empty-state">No books yet. <a href="/books/new">Generate your first one</a>.</p>
+  {% else %}
+  <ul class="book-list">
+    {% for book in books %}
+    <li class="book-row">
+      <a href="/books/{{ book.id }}">
+        <strong>{{ book.title }}</strong>
+        <span class="genre-tag">{{ book.genre }}</span>
+      </a>
+      <span class="status status-{{ book.status }}">{{ book.status }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endblock %}

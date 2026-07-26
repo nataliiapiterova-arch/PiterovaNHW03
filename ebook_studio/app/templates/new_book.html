@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}New book — properebooks.com{% endblock %}
+{% block content %}
+<section class="auth-form">
+  <h1>Generate a new book</h1>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  <form method="post" action="/books/new">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Title
+      <input type="text" name="title" required maxlength="120" placeholder="e.g. Gut Health for Busy Professionals">
+    </label>
+    <label>Topic
+      <input type="text" name="topic" required maxlength="200" placeholder="e.g. improving gut health with small daily habits">
+    </label>
+    <label>Genre
+      <select name="genre">
+        <option value="self-help">Self-help</option>
+        <option value="business">Business</option>
+        <option value="finance">Finance</option>
+        <option value="health">Health</option>
+        <option value="technology">Technology</option>
+        <option value="fiction">Fiction</option>
+      </select>
+    </label>
+    <label>Number of chapters
+      <input type="number" name="num_chapters" min="3" max="20" value="8">
+    </label>
+    <button type="submit" class="cta">Generate book</button>
+  </form>
+</section>
+{% endblock %}

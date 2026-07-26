@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}properebooks.com — AI Ebook Studio{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">properebooks<span>.com</span></a>
+    <nav>
+      <a href="/pricing">Pricing</a>
+      {% if user %}
+        <a href="/dashboard">Dashboard</a>
+        <form action="/logout" method="post" class="inline-form">
+          <button type="submit" class="link-button">Log out</button>
+        </form>
+      {% else %}
+        <a href="/login">Log in</a>
+        <a href="/signup" class="cta">Get started</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    <p>properebooks.com — AI Ebook Studio. Generate a full ebook, cover, and downloadable EPUB/PDF in minutes.</p>
+  </footer>
+</body>
+</html>

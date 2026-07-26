@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Pricing — properebooks.com{% endblock %}
+{% block content %}
+<section class="pricing">
+  <h1>Simple pricing</h1>
+  <div class="plans">
+    {% for key, plan in plans.items() %}
+    <div class="plan-card {% if key == 'pro' %}highlight{% endif %}">
+      <h2>{{ plan.label }}</h2>
+      <p class="price">${{ plan.price_usd }}<span>/mo</span></p>
+      <p class="limit">
+        {% if plan.monthly_books %}
+          {{ plan.monthly_books }} book{{ 's' if plan.monthly_books != 1 else '' }}
+        {% else %}
+          Unlimited books
+        {% endif %}
+      </p>
+      {% if user %}
+        {% if key == 'pro' and user.plan != 'pro' %}
+        <form action="/billing/upgrade" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="cta">Upgrade to Pro</button>
+        </form>
+        {% elif key == user.plan %}
+        <p class="current-plan">Your current plan</p>
+        {% endif %}
+      {% else %}
+        <a href="/signup" class="cta">Get started</a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <p class="fine-print">
+    Pro billing isn't wired up to a real payment processor yet — upgrading
+    here is a placeholder so the product can be demoed end-to-end.
+  </p>
+</section>
+{% endblock %}
