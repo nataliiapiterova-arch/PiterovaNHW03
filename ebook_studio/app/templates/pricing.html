@@ -3,6 +3,7 @@
 {% block content %}
 <section class="pricing">
   <h1>Simple pricing</h1>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
   <div class="plans">
     {% for key, plan in plans.items() %}
     <div class="plan-card {% if key == 'pro' %}highlight{% endif %}">
@@ -31,8 +32,13 @@
     {% endfor %}
   </div>
   <p class="fine-print">
-    Pro billing isn't wired up to a real payment processor yet — upgrading
-    here is a placeholder so the product can be demoed end-to-end.
+    {% if stripe_enabled %}
+      Payments are processed securely by Stripe.
+    {% else %}
+      Stripe isn't configured yet — upgrading here flips your plan
+      instantly (demo mode) so the product can be tested end-to-end
+      without payment credentials.
+    {% endif %}
   </p>
 </section>
 {% endblock %}

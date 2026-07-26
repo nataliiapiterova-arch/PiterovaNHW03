@@ -42,10 +42,13 @@ everything runs on the Python standard library plus **Jinja2** for templates
   (`zipfile`, no `ebooklib`); PDF is a small hand-rolled writer using the
   built-in Helvetica fonts with WinAnsi encoding (`app/export_utils.py`, no
   `reportlab`).
-- **Billing**: `app/billing.py` gates generation by plan/credits. Upgrading
-  to Pro is a stub that just flips the plan in the DB — there's no payment
-  processor wired up. The TODO for swapping in real Stripe Checkout +
-  webhooks is marked inline.
+- **Billing**: `app/billing.py` gates generation by plan/credits, and drives
+  real Stripe Checkout + webhook handling (`app/stripe_client.py` — hand-rolled
+  against Stripe's plain REST API and HMAC webhook signing, no `stripe`
+  package needed, so it needs nothing this sandbox can't already run).
+  Without `STRIPE_SECRET_KEY`/`STRIPE_PRICE_ID` set, upgrading falls back to
+  an instant demo-mode flip so the product still works end-to-end before
+  payment credentials exist.
 
 ## Running it
 
@@ -72,6 +75,9 @@ provider) and lets you download the EPUB/PDF once it's done.
 | `ANTHROPIC_API_KEY` | —  | required if `AI_PROVIDER=claude`                      |
 | `SECRET_KEY`   | auto-generated, persisted to `data/secret.key` | session-signing key — **set this explicitly in production** (see below) |
 | `EBOOK_STUDIO_DATA_DIR` | `ebook_studio/data` | where the SQLite DB, covers, exports, and `secret.key` live — **point this at a persistent volume in production** |
+| `STRIPE_SECRET_KEY` | — | your Stripe secret key; unset = demo-mode instant upgrade instead of real Checkout |
+| `STRIPE_PRICE_ID` | — | the Stripe Price ID for the Pro plan's $19/mo subscription |
+| `STRIPE_WEBHOOK_SECRET` | — | signing secret for the `checkout.session.completed` webhook (see below) |
 
 ## Deploying on Railway
 
@@ -97,6 +103,8 @@ Railway's Nixpacks builder can use directly — no Dockerfile needed.
    - `AI_PROVIDER=mock` to launch immediately with placeholder book content,
      or `AI_PROVIDER=claude` + `ANTHROPIC_API_KEY=<your key>` for real
      AI-generated books.
+   - Leave `STRIPE_*` unset to launch with demo-mode instant upgrades, or set
+     all three (see **Stripe setup** below) for real billing.
 5. Deploy, then generate a public domain (Settings → Networking → Generate
    Domain). Railway builds via Nixpacks (detects Python from
    `requirements.txt`) and starts the `web` process from the `Procfile`.
@@ -104,6 +112,20 @@ Railway's Nixpacks builder can use directly — no Dockerfile needed.
 **Known limitation at this stage**: SQLite works fine for an MVP but doesn't
 scale to concurrent writers under real traffic — see the production-hardening
 list below for when to move off it (e.g. to Postgres).
+
+### Stripe setup (optional — demo mode works without it)
+
+1. Create a Stripe account and, in the Dashboard, create a Product ("Pro
+   plan") with a recurring $19/mo Price. Copy that Price's ID (`price_...`)
+   into `STRIPE_PRICE_ID`.
+2. Copy your **secret key** (Developers → API keys) into `STRIPE_SECRET_KEY`.
+3. Add a webhook endpoint (Developers → Webhooks) pointing at
+   `https://<your-railway-domain>/billing/webhook`, subscribed to the
+   `checkout.session.completed` event. Copy its **signing secret**
+   (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
+4. Redeploy (or just wait for the env vars to apply) — the "Upgrade to Pro"
+   button now redirects to a real Stripe Checkout page, and the plan flips
+   to Pro only once Stripe confirms payment via the webhook, not on click.
 
 ## Tests
 
@@ -124,10 +146,14 @@ XHTML/PDF).
 
 - **Real**: auth, sessions, CSRF protection, SQLite persistence, the full
   generation pipeline and background-job status polling, valid EPUB3 and PDF
-  file output, per-user ownership checks on every book/download route.
-- **Stub (clearly marked with TODOs in code)**: `billing.upgrade_to_pro` (no
-  real payment processor). `ClaudeProvider` is real code, not a stub — it's
-  just unexercised here for lack of network access and a key.
+  file output, per-user ownership checks on every book/download route, Stripe
+  Checkout + webhook billing (`app/stripe_client.py`, `app/billing.py`).
+  `ClaudeProvider` is real code too — it's just unexercised here for lack of
+  network access and a key, not a `NotImplementedError` stub.
+- **Demo-mode fallback (not a stub, a deliberate degrade path)**: without
+  `STRIPE_SECRET_KEY`/`STRIPE_PRICE_ID` set, `billing.start_upgrade` flips the
+  plan instantly instead of redirecting to Stripe, so the product still works
+  end-to-end before payment credentials exist.
 
 ## Next steps to take this to production
 
@@ -135,7 +161,9 @@ XHTML/PDF).
    and smoke-test `ClaudeProvider` end-to-end (it hasn't run against the real
    API yet — written to the Claude API skill's current conventions, but
    unverified outside this sandbox).
-2. Replace the billing stub with real Stripe Checkout + webhook handling.
+2. Set up a real Stripe account/Price/webhook (see **Stripe setup** above) —
+   the integration code is done and tested (signature verification, demo
+   fallback, webhook handling), just not yet exercised against live Stripe.
 3. ~~Move off `wsgiref.simple_server` to a production WSGI server~~ — done:
    `Procfile` runs gunicorn. Still worth putting a real reverse proxy/CDN in
    front once traffic justifies it.

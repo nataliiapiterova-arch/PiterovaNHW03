@@ -130,7 +130,7 @@ def landing(request):
 
 @route("/pricing")
 def pricing(request):
-    return render(request, "pricing.html")
+    return render(request, "pricing.html", stripe_enabled=billing.stripe_enabled())
 
 
 @route("/signup", methods=("GET",))
@@ -274,6 +274,12 @@ def book_download(request, book_id, fmt):
     return Response(data, headers=headers, content_type=content_type)
 
 
+def _absolute_url(request, path):
+    scheme = request.environ.get("HTTP_X_FORWARDED_PROTO", request.environ.get("wsgi.url_scheme", "http"))
+    host = request.environ.get("HTTP_X_FORWARDED_HOST", request.environ.get("HTTP_HOST", "localhost"))
+    return f"{scheme}://{host}{path}"
+
+
 @route("/billing/upgrade", methods=("POST",))
 def upgrade(request):
     redirect_resp = require_login(request)
@@ -281,8 +287,26 @@ def upgrade(request):
         return redirect_resp
     if not check_csrf(request):
         return Response("<h1>403 Invalid CSRF token</h1>", status="403 Forbidden")
-    billing.upgrade_to_pro(request.user["id"])
-    return redirect("/dashboard")
+    success_url = _absolute_url(request, "/dashboard?upgraded=1")
+    cancel_url = _absolute_url(request, "/pricing")
+    try:
+        target = billing.start_upgrade(request.user, success_url, cancel_url)
+    except RuntimeError as exc:
+        return render(request, "pricing.html", error=str(exc), stripe_enabled=True)
+    return redirect(target)
+
+
+@route("/billing/webhook", methods=("POST",))
+def stripe_webhook(request):
+    try:
+        length = int(request.environ.get("CONTENT_LENGTH") or 0)
+    except ValueError:
+        length = 0
+    payload = request.environ["wsgi.input"].read(length) if length else b""
+    sig_header = request.environ.get("HTTP_STRIPE_SIGNATURE")
+    if not billing.process_webhook(payload, sig_header):
+        return Response("", status="400 Bad Request")
+    return Response("", status="200 OK")
 
 
 def serve_static(request, subpath):
